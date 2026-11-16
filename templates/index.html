@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step-by-Step Random Forest Simulator | Diaz Dynasti Saputra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- Top Navbar -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-lg font-bold tracking-tight">Random Forest Step-by-Step Solver</h1>
+                <p class="text-xs text-slate-400">Studi Kasus: Klasifikasi Kelayakan Pemberian Beasiswa Mahasiswa</p>
+            </div>
+            <div class="text-right text-xs text-slate-300 font-mono">
+                <span class="bg-slate-800 px-3 py-1.5 rounded border border-slate-700">Diaz Dynasti Saputra (301240026)</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8 space-y-8">
+
+        <!-- Step 1: Dataset & Konfigurasi Parameter -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Dataset Table -->
+            <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-slate-900">1. Dataset Training (n = 14 Data)</h2>
+                    <span class="text-xs font-mono bg-blue-50 text-blue-700 px-2.5 py-1 rounded border border-blue-200">4 Fitur + 1 Target</span>
+                </div>
+                <div class="overflow-x-auto max-h-80 border border-slate-200 rounded-lg">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0">
+                            <tr>
+                                <th class="px-3 py-2 border-b">No</th>
+                                <th class="px-3 py-2 border-b">IPK</th>
+                                <th class="px-3 py-2 border-b">Penghasilan Ortu</th>
+                                <th class="px-3 py-2 border-b">Prestasi</th>
+                                <th class="px-3 py-2 border-b">Aktif Organisasi</th>
+                                <th class="px-3 py-2 border-b">Terima Beasiswa</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for row in dataset %}
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-3 py-1.5 font-mono text-slate-500">{{ row.no }}</td>
+                                <td class="px-3 py-1.5">{{ row.IPK }}</td>
+                                <td class="px-3 py-1.5">{{ row.Penghasilan_Ortu }}</td>
+                                <td class="px-3 py-1.5">{{ row.Prestasi }}</td>
+                                <td class="px-3 py-1.5">{{ row.Aktif_Organisasi }}</td>
+                                <td class="px-3 py-1.5 font-semibold {% if row.Terima_Beasiswa == 'Ya' %}text-emerald-700{% else %}text-rose-700{% endif %}">
+                                    {{ row.Terima_Beasiswa }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Parameter & Data Uji Form -->
+            <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between space-y-5">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 mb-4">2. Parameter Random Forest & Data Uji</h2>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Pohon</label>
+                            <input type="number" id="n_trees" value="3" min="1" max="5" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Sub-fitur (m)</label>
+                            <input type="number" id="m_features" value="2" min="1" max="4" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Random Seed</label>
+                            <input type="number" id="seed" value="42" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-4 space-y-3">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Data Baru yang Akan Diprediksi:</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">IPK</label>
+                                <select id="in_ipk" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-sm bg-white">
+                                    <option value="Sedang" selected>Sedang</option>
+                                    <option value="Tinggi">Tinggi</option>
+                                    <option value="Cukup">Cukup</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">Penghasilan Ortu</label>
+                                <select id="in_penghasilan" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-sm bg-white">
+                                    <option value="Sedang" selected>Sedang</option>
+                                    <option value="Rendah">Rendah</option>
+                                    <option value="Tinggi">Tinggi</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">Prestasi</label>
+                                <select id="in_prestasi" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-sm bg-white">
+                                    <option value="Ya" selected>Ya</option>
+                                    <option value="Tidak">Tidak</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">Aktif Organisasi</label>
+                                <select id="in_organisasi" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-sm bg-white">
+                                    <option value="Tidak" selected>Tidak</option>
+                                    <option value="Ya">Ya</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="runSimulation()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2.5 px-4 rounded-lg shadow transition text-sm">
+                    Hitung Step-by-Step Random Forest
+                </button>
+            </div>
+        </section>
+
+        <!-- Hasil Majority Vote Banner -->
+        <section id="result_section" class="hidden space-y-6">
+            <div id="vote_banner" class="p-6 rounded-xl border shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <p class="text-xs font-mono uppercase tracking-wider opacity-80">Hasil Akhir Klasifikasi (Majority Vote)</p>
+                    <h3 id="final_label" class="text-2xl font-bold mt-1"></h3>
+                </div>
+                <div class="flex gap-4 font-mono text-sm">
+                    <div class="bg-white/80 px-4 py-2 rounded-lg border">
+                        Vote <strong>Ya</strong>: <span id="vote_ya" class="text-emerald-700 font-bold">0</span>
+                    </div>
+                    <div class="bg-white/80 px-4 py-2 rounded-lg border">
+                        Vote <strong>Tidak</strong>: <span id="vote_tidak" class="text-rose-700 font-bold">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step-by-Step Trees Container -->
+            <div id="trees_container" class="space-y-6"></div>
+        </section>
+
+    </main>
+
+    <script>
+        async function runSimulation() {
+            const payload = {
+                n_trees: document.getElementById('n_trees').value,
+                m_features: document.getElementById('m_features').value,
+                seed: document.getElementById('seed').value,
+                sample: {
+                    IPK: document.getElementById('in_ipk').value,
+                    Penghasilan_Ortu: document.getElementById('in_penghasilan').value,
+                    Prestasi: document.getElementById('in_prestasi').value,
+                    Aktif_Organisasi: document.getElementById('in_organisasi').value
+                }
+            };
+
+            const res = await fetch('/solve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            const resSec = document.getElementById('result_section');
+            resSec.classList.remove('hidden');
+
+            const banner = document.getElementById('vote_banner');
+            const finalLbl = document.getElementById('final_label');
+            if (data.final_decision === 'Ya') {
+                banner.className = "p-6 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-900 shadow-sm flex flex-wrap items-center justify-between gap-4";
+                finalLbl.textContent = "DITERIMA BEASISWA (Ya)";
+            } else {
+                banner.className = "p-6 rounded-xl border bg-rose-50 border-rose-200 text-rose-900 shadow-sm flex flex-wrap items-center justify-between gap-4";
+                finalLbl.textContent = "TIDAK DITERIMA BEASISWA (Tidak)";
+            }
+
+            document.getElementById('vote_ya').textContent = data.votes.Ya;
+            document.getElementById('vote_tidak').textContent = data.votes.Tidak;
+
+            const container = document.getElementById('trees_container');
+            container.innerHTML = '';
+
+            data.trees.forEach(t => {
+                let candRows = '';
+                t.root_candidates.forEach(c => {
+                    candRows += `
+                        <tr class="border-t ${c.feature === t.root_feature ? 'bg-amber-50 font-semibold' : ''}">
+                            <td class="px-3 py-2">${c.feature} ${c.feature === t.root_feature ? '(Terpilih Root)' : ''}</td>
+                            <td class="px-3 py-2 font-mono">${c.total_entropy}</td>
+                            <td class="px-3 py-2 font-mono">${c.gain}</td>
+                            <td class="px-3 py-2 font-mono">${c.split_info}</td>
+                            <td class="px-3 py-2 font-mono text-blue-700">${c.gain_ratio}</td>
+                        </tr>
+                    `;
+                });
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4";
+                card.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                        <h4 class="text-base font-bold text-slate-900">Pohon Keputusan #${t.tree_id}</h4>
+                        <span class="text-xs font-mono px-3 py-1 rounded-full ${t.prediction === 'Ya' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                            Prediksi Pohon #${t.tree_id}: <strong>${t.prediction}</strong>
+                        </span>
+                    </div>
+                    <div class="text-xs text-slate-600 space-y-1">
+                        <p><strong>1. Bootstrap Sampling (n=14 indeks data):</strong> <span class="font-mono bg-slate-100 px-2 py-0.5 rounded">[${t.bootstrap_nos.join(', ')}]</span></p>
+                        <p><strong>2. Jalur Keputusan Data Uji:</strong> <span class="font-mono text-blue-700">${t.decision_path.join(' &rarr; ')} &rarr; [${t.prediction}]</span></p>
+                    </div>
+                    <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-50 text-slate-700">
+                                <tr>
+                                    <th class="px-3 py-2">Kandidat Fitur Root (m=${payload.m_features})</th>
+                                    <th class="px-3 py-2">Entropy Total</th>
+                                    <th class="px-3 py-2">Information Gain</th>
+                                    <th class="px-3 py-2">Split Info</th>
+                                    <th class="px-3 py-2">Gain Ratio</th>
+                                </tr>
+                            </thead>
+                            <tbody>${candRows}</tbody>
+                        </table>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.onload = runSimulation;
+    </script>
+</body>
+</html>
